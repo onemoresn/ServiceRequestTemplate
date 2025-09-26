@@ -13,6 +13,28 @@
   const SESSION_KEY = 'service_admin_session_v1';
   function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY)) } catch { return null } }
 
+  // Optional: Manually set the admin name in code to force a session
+  // How to use:
+  // 1) Set MANUAL_ADMIN_NAME = 'Your Name' below, OR
+  // 2) Define window.SERVICE_MANUAL_ADMIN_NAME (and optional window.SERVICE_MANUAL_ADMIN_EMAIL) in HTML before this script.
+  // This will populate the admin session so actions (Pending/Completed, comments) use that name.
+  const MANUAL_ADMIN_NAME = 'Tony Starks';
+  const MANUAL_ADMIN_EMAIL = 'tstarks@gmail.com';
+  function ensureManualSession(){
+    try {
+      const name = (window.SERVICE_MANUAL_ADMIN_NAME || MANUAL_ADMIN_NAME || '').trim();
+      if(!name) return;
+      const email = (window.SERVICE_MANUAL_ADMIN_EMAIL || MANUAL_ADMIN_EMAIL || '').trim();
+      const existing = getSession();
+      if(existing && existing.name === name && (!email || existing.email === email)) return;
+      const session = { name, email, createdAt: Date.now() };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      // Notify listeners (e.g., prefs.js) that session changed
+      try { window.dispatchEvent(new CustomEvent('adminSessionChanged', { detail: session })); } catch {}
+    } catch {}
+  }
+  ensureManualSession();
+
   // Elements
   const countNew = document.getElementById('count-new');
   const countPending = document.getElementById('count-pending');
