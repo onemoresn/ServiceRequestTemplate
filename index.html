@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Service Request • Submit</title>
+	<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+	<script>
+		tailwind.config = {
+			theme: {
+				extend: {
+					fontFamily: { sans: ['Inter', 'ui-sans-serif','system-ui'] },
+					colors: { brand: {50:'#f0f7ff',100:'#d9ecff',200:'#bfe0ff',300:'#94ceff',400:'#5ab4ff',500:'#2196f3',600:'#1476cc',700:'#135da3',800:'#124f87',900:'#123f69'} }
+				}
+			}
+		}
+	</script>
+	<link rel="preconnect" href="https://fonts.googleapis.com"/>
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+	<style>body{font-feature-settings:'cv02','cv03','cv04','cv11';}</style>
+</head>
+<body class="h-full bg-slate-950 text-slate-100 antialiased">
+	<div class="min-h-full flex flex-col">
+		<header class="border-b border-slate-800 backdrop-blur bg-slate-950/70 sticky top-0 z-40">
+			<div class="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-white font-bold">SR</span>
+					<div>
+						<h1 class="text-lg font-semibold leading-tight">Service Request Portal</h1>
+						<p class="text-xs text-slate-400 -mt-0.5">Submit a request for support</p>
+					</div>
+				</div>
+				<nav class="hidden md:flex items-center gap-6 text-sm">
+					<span class="font-medium text-brand-400">Submit</span>
+					<button id="admin-login-btn" class="text-slate-400 hover:text-slate-200 transition">Admin Login</button>
+					<button id="open-settings" class="text-slate-400 hover:text-slate-200 transition">Settings</button>
+				</nav>
+			</div>
+		</header>
+		<main class="flex-1 py-10 px-4">
+			<div class="mx-auto max-w-4xl">
+				<div class="mb-10">
+					<h2 class="text-2xl font-semibold tracking-tight">Submit a Service Request</h2>
+					<p class="text-slate-400 mt-1 text-sm">Provide details so we can route and resolve your request efficiently.</p>
+				</div>
+				<form id="request-form" class="space-y-8" novalidate>
+					<section class="bg-slate-900/60 rounded-2xl border border-slate-800 shadow-sm p-6 space-y-6">
+						<h3 class="font-semibold text-lg flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-brand-500 animate-pulse"></span> Contact Information</h3>
+						<div class="grid gap-6 md:grid-cols-2">
+							<div class="flex flex-col gap-2">
+								<label for="name" class="text-sm font-medium">Name <span class="text-brand-400">*</span></label>
+								<input id="name" name="name" type="text" required autocomplete="name" class="rounded-xl bg-slate-950/40 border-slate-700 focus:border-brand-500 focus:ring-brand-500" placeholder="Jane Doe" />
+								<p class="hidden text-xs text-rose-400" data-error-for="name"></p>
+							</div>
+							<div class="flex flex-col gap-2">
+								<label for="email" class="text-sm font-medium">Email <span class="text-brand-400">*</span></label>
+								<input id="email" name="email" type="email" required autocomplete="email" class="rounded-xl bg-slate-950/40 border-slate-700 focus:border-brand-500 focus:ring-brand-500" placeholder="jane@example.com" />
+								<p class="hidden text-xs text-rose-400" data-error-for="email"></p>
+							</div>
+						</div>
+					</section>
+					<section class="bg-slate-900/60 rounded-2xl border border-slate-800 shadow-sm p-6 space-y-6">
+						<h3 class="font-semibold text-lg">Request Details</h3>
+						<div class="grid gap-6 md:grid-cols-3">
+							<div class="flex flex-col gap-2 md:col-span-2">
+								<label for="subject" class="text-sm font-medium">Subject <span class="text-brand-400">*</span></label>
+								<input id="subject" name="subject" type="text" required class="rounded-xl bg-slate-950/40 border-slate-700 focus:border-brand-500 focus:ring-brand-500" placeholder="Laptop won't start" />
+								<p class="hidden text-xs text-rose-400" data-error-for="subject"></p>
+							</div>
+							<div class="flex flex-col gap-2">
+								<label for="priority" class="text-sm font-medium">Priority <span class="text-brand-400">*</span></label>
+								<select id="priority" name="priority" required class="rounded-xl bg-slate-950/40 border-slate-700 focus:border-brand-500 focus:ring-brand-500">
+									<option value="">Select Priority</option>
+									<option>Low</option>
+									<option>Medium</option>
+									<option>High</option>
+								</select>
+								<p class="hidden text-xs text-rose-400" data-error-for="priority"></p>
+							</div>
+							<div class="flex flex-col gap-2">
+								<label for="category" class="text-sm font-medium">Category <span class="text-brand-400">*</span></label>
+								<select id="category" name="category" required class="rounded-xl bg-slate-950/40 border-slate-700 focus:border-brand-500 focus:ring-brand-500">
+									<option value="">Select Category</option>
+									<option>IT Support</option>
+									<option>Facilities</option>
+									<option>HR</option>
+									<option>Other</option>
+								</select>
+								<p class="hidden text-xs text-rose-400" data-error-for="category"></p>
+							</div>
+							<div class="flex flex-col gap-2 md:col-span-3">
+								<label for="description" class="text-sm font-medium">Description <span class="text-brand-400">*</span></label>
+								<textarea id="description" name="description" required rows="6" class="rounded-xl bg-slate-950/40 border-slate-700 focus:border-brand-500 focus:ring-brand-500 resize-y" placeholder="Provide clear details so we can help you faster..."></textarea>
+								<p class="hidden text-xs text-rose-400" data-error-for="description"></p>
+							</div>
+						</div>
+					</section>
+					<section class="bg-slate-900/60 rounded-2xl border border-slate-800 shadow-sm p-6 space-y-4">
+						<div class="flex flex-wrap items-center justify-between gap-4">
+							<div class="text-sm text-slate-400">Fields marked * are required.</div>
+							<div class="flex gap-3">
+								<button type="reset" class="px-5 py-2.5 rounded-xl text-sm font-medium border border-slate-700 text-slate-300 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500/50">Reset</button>
+								<button type="submit" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-brand-500 hover:bg-brand-400 text-white shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 focus:ring-offset-slate-950 transition">Submit Request</button>
+							</div>
+						</div>
+						<div id="form-success" class="hidden rounded-xl border border-emerald-600/30 bg-emerald-500/10 p-4 text-sm text-emerald-300 flex items-start gap-3">
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+							<span>Request submitted successfully. Your reference ID is <strong class="font-semibold" id="ref-id"></strong>.</span>
+						</div>
+					</section>
+				</form>
+				<footer class="mt-16 pt-8 pb-12 text-center text-xs text-slate-500">
+					<p>&copy; <span id="year"></span> Service Request Portal • All rights reserved.</p>
+				</footer>
+			</div>
+		</main>
+	</div>
+
+		<!-- Admin Login Modal -->
+		<div id="admin-login-modal" class="fixed inset-0 hidden z-50">
+			<div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" data-admin-login-close></div>
+			<div class="relative mx-auto max-w-sm mt-32 bg-slate-900 border border-slate-700 rounded-2xl shadow-xl p-6 flex flex-col gap-5">
+				<div class="flex items-start justify-between">
+					<h3 class="text-lg font-semibold">Admin Login</h3>
+					<button id="close-admin-login" class="text-slate-400 hover:text-slate-200">✕</button>
+				</div>
+				<p class="text-xs text-slate-400 leading-relaxed">Enter your admin name exactly as it appears in the Admin Users list.</p>
+				<form id="admin-login-form" class="space-y-4">
+					<div class="space-y-2">
+						<label for="admin-login-name" class="text-xs uppercase tracking-wide text-slate-400">Admin Name</label>
+						<input id="admin-login-name" name="name" autocomplete="off" required class="w-full text-sm rounded-xl bg-slate-950/40 border border-slate-700 px-3 py-2 focus:border-brand-500 focus:ring-brand-500" placeholder="Jane Admin" />
+					</div>
+					<button class="w-full rounded-xl bg-brand-500 hover:bg-brand-400 text-white text-sm font-medium px-4 py-2">Login</button>
+					<p id="admin-login-error" class="hidden text-xs text-rose-400"></p>
+				</form>
+				<div class="text-[10px] text-slate-500 pt-1">Case-sensitive match. Accounts managed in Admin panel.</div>
+			</div>
+		</div>
+
+		<!-- Settings Modal -->
+		<div id="settings-modal" class="fixed inset-0 hidden z-50">
+			<div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" data-settings-close></div>
+			<div class="relative mx-auto max-w-md mt-24 bg-slate-900 border border-slate-700 rounded-2xl shadow-xl p-6 flex flex-col gap-6">
+				<div class="flex items-start justify-between">
+					<h3 class="text-lg font-semibold">Settings</h3>
+					<button id="close-settings" class="text-slate-400 hover:text-slate-200">✕</button>
+				</div>
+				<form id="settings-form" class="space-y-6">
+					<section class="space-y-3">
+						<h4 class="text-sm font-medium text-slate-300">Theme</h4>
+						<div class="flex items-center gap-4 text-sm">
+							<label class="inline-flex items-center gap-2">
+								<input type="radio" name="theme" value="dark" class="text-brand-500 focus:ring-brand-500" checked>
+								<span>Dark</span>
+							</label>
+							<label class="inline-flex items-center gap-2">
+								<input type="radio" name="theme" value="light" class="text-brand-500 focus:ring-brand-500">
+								<span>Light</span>
+							</label>
+						</div>
+					</section>
+					<section class="space-y-3">
+						<h4 class="text-sm font-medium text-slate-300">Text Size</h4>
+						<select name="textSize" id="text-size" class="w-full bg-slate-950/40 border border-slate-700 rounded-xl text-sm px-3 py-2 focus:border-brand-500 focus:ring-brand-500">
+							<option value="sm">Small</option>
+							<option value="base" selected>Default</option>
+							<option value="lg">Large</option>
+							<option value="xl">Extra Large</option>
+						</select>
+						<p class="text-[11px] text-slate-500">Applies to body text size scaling.</p>
+					</section>
+					<div class="flex justify-end gap-3 pt-2">
+						<button type="button" id="settings-cancel" class="px-4 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-800 hover:bg-slate-700">Cancel</button>
+						<button class="px-5 py-2 rounded-xl text-sm font-semibold bg-brand-500 hover:bg-brand-400 text-white">Save</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+	<script>
+	(function(){
+		const STORAGE_KEY = 'service_requests_v2';
+		const ADMIN_KEY = 'service_admin_users_v1';
+		const SESSION_KEY = 'service_admin_session_v1';
+		const EMAIL_LOG_KEY = 'service_email_log_v1';
+		const form = document.getElementById('request-form');
+		const successBox = document.getElementById('form-success');
+		const refSpan = document.getElementById('ref-id');
+		document.getElementById('year').textContent = new Date().getFullYear();
+
+		function load(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [] } catch { return [] } }
+		function save(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+		function nextId(list){ return (list.reduce((m,r)=> Math.max(m, r.id||0),0) + 1); }
+		function trim(v){ return (v||'').toString().trim(); }
+		function showError(name, msg){
+			const p = document.querySelector(`[data-error-for="${name}"]`); if(!p) return; p.textContent = msg; p.classList.remove('hidden');
+			const input = document.getElementById(name); if(input){ input.classList.add('border-rose-500','focus:border-rose-500','focus:ring-rose-500'); }
+		}
+		function clearErrors(){
+			document.querySelectorAll('[data-error-for]').forEach(p=>{ p.classList.add('hidden'); p.textContent=''; });
+			form.querySelectorAll('.border-rose-500').forEach(el=> el.classList.remove('border-rose-500','focus:border-rose-500','focus:ring-rose-500'));
+		}
+
+		function logEmail(event){
+			try {
+				const list = JSON.parse(localStorage.getItem(EMAIL_LOG_KEY)) || [];
+				list.push(event);
+				localStorage.setItem(EMAIL_LOG_KEY, JSON.stringify(list));
+			} catch { /* ignore */ }
+		}
+
+		function notifyAdmins(record){
+			// --- Email Notification Logic (Request Submitted) ---
+			// Customization Zone:
+			// Modify buildEmail() to change subjects/bodies.
+			// Replace sendMailto() with real email API integration if desired.
+			// Currently: sends to matching category admins (and their managers) and separately to the requester.
+			let admins=[]; try { admins = JSON.parse(localStorage.getItem(ADMIN_KEY)) || []; } catch { admins=[]; }
+			const matchingAdmins = admins.filter(a=> a.category && record.category && a.category.toLowerCase() === record.category.toLowerCase());
+			const requesterEmail = record.email;
+
+			function buildEmail(target, context){
+				const baseSubject = `[Service Request #${record.id}] ${record.subject}`;
+				const baseLines = [
+					'Request Submitted',
+					'',
+					`ID: #${record.id}`,
+					`Requester: ${record.name} <${record.email}>`,
+					`Category: ${record.category}`,
+					`Priority: ${record.priority}`,
+					`Submitted: ${new Date(record.createdAt).toLocaleString()}`,
+					'',
+					'Subject:',
+					record.subject,
+					'',
+					'Description:',
+					record.description,
+					'',
+					'Context: ' + context,
+					'',
+					'--- Customize email template in index.html (search for "Email Notification Logic (Request Submitted)") ---'
+				];
+				return { subject: baseSubject, body: baseLines.join('\n') };
+			}
+
+			function sendMailto(to, subject, body){
+				if(!to) return;
+				const link = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+				const a = document.createElement('a'); a.href = link; a.style.display='none'; document.body.appendChild(a); a.click(); setTimeout(()=> a.remove(), 0);
+				logEmail({ id: Date.now(), requestId: record.id, category: record.category, to, subject, createdAt: Date.now(), reason:'request-submitted'});
+			}
+
+			// Notify admins & their managers
+			matchingAdmins.forEach(adm=>{
+				if(adm.email){
+					const { subject, body } = buildEmail(adm.email, 'you are an admin for this category');
+					sendMailto(adm.email, subject, body);
+				}
+				if(adm.managerEmail){
+					const { subject, body } = buildEmail(adm.managerEmail, 'you manage an admin for this category');
+					sendMailto(adm.managerEmail, subject, body);
+				}
+			});
+
+			// Notify requester (confirmation)
+			if(requesterEmail){
+				const { subject, body } = buildEmail(requesterEmail, 'this is your confirmation copy');
+				sendMailto(requesterEmail, subject, body);
+			}
+		}
+
+		form.addEventListener('submit', (e)=>{
+			e.preventDefault();
+			clearErrors();
+			const data = new FormData(form);
+			const record = {
+				id: null,
+				name: trim(data.get('name')),
+				email: trim(data.get('email')),
+				subject: trim(data.get('subject')),
+				priority: trim(data.get('priority')),
+				category: trim(data.get('category')),
+				description: trim(data.get('description')),
+				status: 'New',
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+				movedToPendingAt: null,
+				completedAt: null,
+				comments: []
+			};
+			const required = ['name','email','subject','priority','category','description'];
+			let invalid = false;
+			required.forEach(f=>{ if(!record[f]){ showError(f, 'Required'); invalid=true; }});
+			if(record.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(record.email)){ showError('email','Invalid email'); invalid=true; }
+			if(invalid){ return; }
+			const list = load();
+			record.id = nextId(list);
+			list.push(record);
+			save(list);
+			// Notify other open admin/dashboard pages (same-tab listeners) that requests changed
+			window.dispatchEvent(new CustomEvent('serviceRequestsUpdated', { detail:{ action:'create', id:record.id }}));
+			notifyAdmins(record);
+			refSpan.textContent = '#' + record.id;
+			successBox.classList.remove('hidden');
+			successBox.scrollIntoView({behavior:'smooth', block:'center'});
+			form.reset();
+		});
+
+		form.addEventListener('reset', ()=>{
+			clearErrors();
+			successBox.classList.add('hidden');
+		});
+
+		// ---- Admin Login ----
+		const loginBtn = document.getElementById('admin-login-btn');
+		const loginModal = document.getElementById('admin-login-modal');
+		const loginForm = document.getElementById('admin-login-form');
+		const loginNameInput = document.getElementById('admin-login-name');
+		const loginError = document.getElementById('admin-login-error');
+		const loginCloseBtn = document.getElementById('close-admin-login');
+		const loginBackdrop = loginModal.querySelector('[data-admin-login-close]');
+
+		function loadAdmins(){ try { return JSON.parse(localStorage.getItem(ADMIN_KEY)) || [] } catch { return [] } }
+		function setSession(admin){ localStorage.setItem(SESSION_KEY, JSON.stringify({id:admin.id,name:admin.name,ts:Date.now()})); }
+		function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY)) } catch { return null } }
+
+		function openLogin(){ loginError.classList.add('hidden'); loginError.textContent=''; loginModal.classList.remove('hidden'); setTimeout(()=> loginNameInput.focus(),50); }
+		function closeLogin(){ loginModal.classList.add('hidden'); }
+
+		function updateLoginButton(){
+			const session = getSession();
+			if(session && session.name){
+				loginBtn.textContent = 'Go to Admin ('+session.name+')';
+				loginBtn.setAttribute('data-session','true');
+			}
+		}
+
+		loginBtn?.addEventListener('click', ()=>{
+			const hasSession = loginBtn.getAttribute('data-session')==='true';
+			if(hasSession){ window.location.href = 'admin.html'; return; }
+			openLogin();
+		});
+		loginCloseBtn?.addEventListener('click', closeLogin);
+		loginBackdrop?.addEventListener('click', closeLogin);
+		document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !loginModal.classList.contains('hidden')) closeLogin(); });
+
+		loginForm?.addEventListener('submit', (e)=>{
+			e.preventDefault();
+			loginError.classList.add('hidden'); loginError.textContent='';
+			const name = (loginNameInput.value||'').trim();
+			if(!name){ loginError.textContent='Name required'; loginError.classList.remove('hidden'); return; }
+			const admins = loadAdmins();
+			const match = admins.find(a=> a.name === name);
+			if(!match){ loginError.textContent='Admin not found'; loginError.classList.remove('hidden'); return; }
+			setSession(match);
+			loginBtn.textContent = 'Go to Admin ('+match.name+')';
+			loginBtn.setAttribute('data-session','true');
+			closeLogin();
+			window.location.href = 'admin.html';
+		});
+
+		updateLoginButton();
+
+		// Initialize shared preferences (per-admin when logged in)
+		if(window.Prefs){ window.Prefs.init(); }
+	})();
+	</script>
+	<script src="prefs.js"></script>
+</body>
+</html>
