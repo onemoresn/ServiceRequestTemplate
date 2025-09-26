@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Service Request • Admin</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily:{sans:['Inter','ui-sans-serif','system-ui']}, colors:{brand:{50:'#f0f7ff',100:'#d9ecff',200:'#bfe0ff',300:'#94ceff',400:'#5ab4ff',500:'#2196f3',600:'#1476cc',700:'#135da3',800:'#124f87',900:'#123f69'}} } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>body{font-feature-settings:'cv02','cv03','cv04','cv11';}</style>
+</head>
+<body class="h-full bg-slate-950 text-slate-100 antialiased">
+  <div class="min-h-full flex flex-col">
+    <header class="border-b border-slate-800 backdrop-blur bg-slate-950/70 sticky top-0 z-40">
+      <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-white font-bold">SR</span>
+          <div>
+            <h1 class="text-lg font-semibold leading-tight">Admin Dashboard</h1>
+            <p class="text-xs text-slate-400 -mt-0.5">Manage service requests</p>
+          </div>
+        </div>
+        <nav class="hidden md:flex items-center gap-6 text-sm">
+          <a href="index.html" class="text-slate-400 hover:text-slate-200 transition">Submit</a>
+          <a href="dashboard.html" class="text-slate-400 hover:text-slate-200 transition">Dashboard</a>
+          <button id="open-admin-users" class="text-slate-400 hover:text-slate-200 transition">Admin Users</button>
+          <button id="open-settings" class="text-slate-400 hover:text-slate-200 transition">Settings</button>
+          <button id="logout-btn" class="text-rose-400 hover:text-rose-300 transition">Logout</button>
+        </nav>
+      </div>
+    </header>
+    <main class="flex-1 py-10 px-4">
+      <div class="mx-auto max-w-6xl space-y-10">
+        <!-- Dashboard cards -->
+        <section>
+          <div class="grid gap-6 sm:grid-cols-3">
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 flex flex-col gap-3">
+              <div class="text-xs uppercase tracking-wide text-slate-400">New</div>
+              <div class="text-3xl font-semibold" id="count-new">0</div>
+              <div class="text-[11px] text-slate-500">Awaiting triage</div>
+            </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 flex flex-col gap-3">
+              <div class="text-xs uppercase tracking-wide text-slate-400">Pending</div>
+              <div class="text-3xl font-semibold" id="count-pending">0</div>
+              <div class="text-[11px] text-slate-500">In progress work</div>
+            </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 flex flex-col gap-3">
+              <div class="text-xs uppercase tracking-wide text-slate-400">Completed</div>
+              <div class="text-3xl font-semibold" id="count-completed">0</div>
+              <div class="text-[11px] text-slate-500">Resolved requests</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Table & filters -->
+        <section class="space-y-6">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 class="text-xl font-semibold tracking-tight">All Requests</h2>
+            <div class="flex flex-wrap gap-3 items-center">
+              <select id="filter-status" class="bg-slate-900/60 border border-slate-700 rounded-xl text-sm px-3 py-2 focus:border-brand-500 focus:ring-brand-500">
+                <option value="all">All</option>
+                <option value="New">New</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+              </select>
+              <input id="search" type="search" placeholder="Search..." class="bg-slate-900/60 border border-slate-700 rounded-xl text-sm px-3 py-2 focus:border-brand-500 focus:ring-brand-500" />
+              <button id="export-csv" class="px-4 py-2 rounded-xl text-sm font-medium bg-brand-500 hover:bg-brand-400 text-white">Export CSV</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/40">
+            <table id="requests-table" class="w-full text-sm">
+              <thead class="bg-slate-900/60 text-slate-300">
+                <tr>
+                  <th class="text-left font-medium px-4 py-3">ID</th>
+                  <th class="text-left font-medium px-4 py-3">Subject</th>
+                  <th class="text-left font-medium px-4 py-3">Requester</th>
+                  <th class="text-left font-medium px-4 py-3">Category</th>
+                  <th class="text-left font-medium px-4 py-3">Priority</th>
+                  <th class="text-left font-medium px-4 py-3">Status</th>
+                  <th class="text-left font-medium px-4 py-3">Updated</th>
+                  <th class="text-left font-medium px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800"></tbody>
+            </table>
+            <div id="empty-state" class="hidden p-10 text-center text-slate-500 text-sm">No requests found.</div>
+          </div>
+        </section>
+        <!-- Admin Users Management moved to modal -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Details Modal -->
+  <div id="details-modal" class="fixed inset-0 hidden z-50">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" data-close></div>
+    <div class="relative mx-auto max-w-2xl mt-16 bg-slate-900 border border-slate-700 rounded-2xl shadow-xl p-6 flex flex-col gap-6">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 class="text-lg font-semibold" id="details-title">Request Details</h3>
+          <p class="text-xs text-slate-400" id="details-subtitle"></p>
+        </div>
+        <button class="text-slate-400 hover:text-slate-200" id="details-close">✕</button>
+      </div>
+      <div id="details-content" class="space-y-4 text-sm"></div>
+      <div class="space-y-3">
+        <h4 class="font-medium text-sm">Comments</h4>
+        <div id="comments-list" class="space-y-3 max-h-60 overflow-y-auto pr-1"></div>
+        <form id="comment-form" class="flex gap-3 pt-2">
+          <input id="comment-author" name="author" placeholder="Your name" class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500" />
+          <input id="comment-text" name="text" placeholder="Add a comment" class="flex-[2] bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:border-brand-500 focus:ring-brand-500" />
+          <button class="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-400 text-white text-sm font-medium">Add</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Users Modal -->
+  <div id="admin-users-modal" class="fixed inset-0 hidden z-50">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" data-admin-users-close></div>
+    <div class="relative mx-auto max-w-5xl mt-14 bg-slate-900 border border-slate-700 rounded-2xl shadow-xl p-6">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h3 class="text-lg font-semibold">Admin Users</h3>
+          <p class="text-xs text-slate-400">Manage platform access</p>
+        </div>
+        <button id="close-admin-users" class="text-slate-400 hover:text-slate-200">✕</button>
+      </div>
+      <div class="grid gap-6 md:grid-cols-3">
+        <form id="admin-user-form" class="md:col-span-1 space-y-4 bg-slate-950/40 rounded-2xl border border-slate-800 p-5">
+          <h3 class="text-sm font-medium text-slate-300">Add Admin</h3>
+          <div class="space-y-2">
+            <label class="text-xs uppercase tracking-wide text-slate-400" for="admin-name">Name</label>
+            <input id="admin-name" name="name" required class="w-full text-sm rounded-xl bg-slate-900/60 border border-slate-700 px-3 py-2 focus:border-brand-500 focus:ring-brand-500" placeholder="Jane Admin" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs uppercase tracking-wide text-slate-400" for="admin-email">Email</label>
+            <input id="admin-email" name="email" type="email" required class="w-full text-sm rounded-xl bg-slate-900/60 border border-slate-700 px-3 py-2 focus:border-brand-500 focus:ring-brand-500" placeholder="admin@example.com" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs uppercase tracking-wide text-slate-400" for="manager-name">Manager Name</label>
+            <input id="manager-name" name="managerName" class="w-full text-sm rounded-xl bg-slate-900/60 border border-slate-700 px-3 py-2 focus:border-brand-500 focus:ring-brand-500" placeholder="Manager Name" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs uppercase tracking-wide text-slate-400" for="manager-email">Manager Email</label>
+            <input id="manager-email" name="managerEmail" type="email" class="w-full text-sm rounded-xl bg-slate-900/60 border border-slate-700 px-3 py-2 focus:border-brand-500 focus:ring-brand-500" placeholder="manager@example.com" />
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs uppercase tracking-wide text-slate-400" for="admin-category">Category</label>
+            <select id="admin-category" name="category" class="w-full text-sm rounded-xl bg-slate-900/60 border border-slate-700 px-3 py-2 focus:border-brand-500 focus:ring-brand-500" required>
+              <option value="" disabled selected>Select Category</option>
+              <option>IT Support</option>
+              <option>Facilities</option>
+              <option>HR</option>
+              <option>Other</option>
+            </select>
+          </div>
+            <div class="space-y-2">
+              <label class="text-xs uppercase tracking-wide text-slate-400" for="admin-role">Role</label>
+              <select id="admin-role" name="role" class="w-full text-sm rounded-xl bg-slate-900/60 border border-slate-700 px-3 py-2 focus:border-brand-500 focus:ring-brand-500">
+                <option>Admin</option>
+                <option>Manager</option>
+                <option>Viewer</option>
+              </select>
+            </div>
+          <button class="w-full rounded-xl bg-brand-500 hover:bg-brand-400 text-white text-sm font-medium px-4 py-2">Add User</button>
+          <p id="admin-user-msg" class="hidden text-xs text-rose-400"></p>
+        </form>
+        <div class="md:col-span-2 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-medium text-slate-300">Current Admins</h3>
+            <button id="seed-admins" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700">Seed Admins</button>
+          </div>
+          <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/40">
+            <table class="w-full text-sm" id="admins-table">
+              <thead class="bg-slate-900/60 text-slate-300">
+                <tr>
+                  <th class="text-left font-medium px-4 py-3">ID</th>
+                  <th class="text-left font-medium px-4 py-3">Name</th>
+                  <th class="text-left font-medium px-4 py-3">Email</th>
+                  <th class="text-left font-medium px-4 py-3">Category</th>
+                  <th class="text-left font-medium px-4 py-3">Manager</th>
+                  <th class="text-left font-medium px-4 py-3">Role</th>
+                  <th class="text-left font-medium px-4 py-3">Added</th>
+                  <th class="text-left font-medium px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800"></tbody>
+            </table>
+            <div id="admins-empty" class="hidden p-6 text-center text-xs text-slate-500">No admin users yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+  <script src="prefs.js"></script>
+  <!-- Subtle Seed Demo floating button -->
+  <button id="seed-demo" title="Load example demo data (visual reference only)" class="group fixed bottom-3 right-3 z-40 text-[10px] tracking-wide px-2.5 py-1.5 rounded-full bg-slate-800/60 border border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-700/70 backdrop-blur transition shadow-sm">
+    Demo Data
+    <span class="pointer-events-none absolute opacity-0 group-hover:opacity-100 transition text-[10px] -top-9 right-0 bg-slate-900 text-slate-300 border border-slate-700 px-2 py-1 rounded shadow-xl whitespace-nowrap">Applies sample requests for UI preview</span>
+  </button>
+  <script>
+    (function(){
+      const SESSION_KEY='service_admin_session_v1';
+      const btn=document.getElementById('logout-btn');
+      function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY)) } catch { return null } }
+      if(!getSession()) btn.classList.add('hidden');
+      btn.addEventListener('click', ()=>{ localStorage.removeItem(SESSION_KEY); window.dispatchEvent(new Event('adminSessionChanged')); window.location.href='index.html'; });
+    })();
+    // Initialize shared prefs (per-admin)
+    if(window.Prefs){ window.Prefs.init(); }
+  </script>
+</body>
+</html>

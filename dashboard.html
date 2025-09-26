@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Service Request • Dashboard</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <script>
+    tailwind.config = { theme:{ extend:{ fontFamily:{sans:['Inter','ui-sans-serif','system-ui']}, colors:{brand:{50:'#f0f7ff',100:'#d9ecff',200:'#bfe0ff',300:'#94ceff',400:'#5ab4ff',500:'#2196f3',600:'#1476cc',700:'#135da3',800:'#124f87',900:'#123f69'}} } } };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>body{font-feature-settings:'cv02','cv03','cv04','cv11';}</style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <!-- Centralized preferences -->
+  <script src="prefs.js"></script>
+</head>
+<body class="h-full bg-slate-950 text-slate-100 antialiased">
+  <div class="min-h-full flex flex-col">
+    <header class="border-b border-slate-800 backdrop-blur bg-slate-950/70 sticky top-0 z-40">
+      <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-white font-bold">SR</span>
+          <div>
+            <h1 class="text-lg font-semibold leading-tight">Analytics Dashboard</h1>
+            <p class="text-xs text-slate-400 -mt-0.5" id="session-user"></p>
+          </div>
+        </div>
+        <nav class="hidden md:flex items-center gap-6 text-sm">
+          <a href="index.html" class="text-slate-400 hover:text-slate-200 transition">Submit</a>
+          <a href="admin.html" class="text-slate-400 hover:text-slate-200 transition">Admin</a>
+          <button id="open-settings" class="text-slate-400 hover:text-slate-200 transition">Settings</button>
+          <button id="logout-btn" class="text-rose-400 hover:text-rose-300 transition">Logout</button>
+        </nav>
+      </div>
+    </header>
+    <main class="flex-1 py-10 px-4">
+      <div class="mx-auto max-w-6xl space-y-10">
+        <!-- Filters + Actions -->
+        <section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 flex flex-col gap-5">
+          <div class="flex items-center justify-end gap-3">
+            <button id="refresh-btn" class="px-4 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-800 hover:bg-slate-700">Refresh</button>
+            <button id="export-pdf" class="px-4 py-2 rounded-xl text-xs font-medium bg-brand-500 hover:bg-brand-400 text-white">Export PDF</button>
+          </div>
+          <div class="flex flex-wrap gap-4 items-end">
+            <div>
+              <label class="block text-xs uppercase tracking-wide text-slate-400 mb-1">Month</label>
+              <select id="filter-month" class="bg-slate-950/40 border border-slate-700 rounded-xl text-sm px-3 py-2 focus:border-brand-500 focus:ring-brand-500 min-w-[120px]"></select>
+            </div>
+            <div>
+              <label class="block text-xs uppercase tracking-wide text-slate-400 mb-1">Year</label>
+              <select id="filter-year" class="bg-slate-950/40 border border-slate-700 rounded-xl text-sm px-3 py-2 focus:border-brand-500 focus:ring-brand-500 min-w-[100px]"></select>
+            </div>
+            <div class="flex-1 min-w-[160px]">
+              <label class="block text-xs uppercase tracking-wide text-slate-400 mb-1">Admin User</label>
+              <select id="filter-admin" class="w-full bg-slate-950/40 border border-slate-700 rounded-xl text-sm px-3 py-2 focus:border-brand-500 focus:ring-brand-500"><option value="all">All</option></select>
+            </div>
+            <div class="flex-1 min-w-[160px]">
+              <label class="block text-xs uppercase tracking-wide text-slate-400 mb-1">Category</label>
+              <select id="filter-category" class="w-full bg-slate-950/40 border border-slate-700 rounded-xl text-sm px-3 py-2 focus:border-brand-500 focus:ring-brand-500"><option value="all">All</option></select>
+            </div>
+            <div>
+              <label class="block text-xs uppercase tracking-wide text-slate-400 mb-1">View</label>
+              <select id="filter-view" class="bg-slate-950/40 border border-slate-700 rounded-xl text-sm px-3 py-2 focus:border-brand-500 focus:ring-brand-500">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </div>
+            <div class="ml-auto flex gap-3">
+              <button id="clear-filters" class="px-4 py-2 rounded-xl text-xs font-medium border border-slate-700 bg-slate-800 hover:bg-slate-700">Reset</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Metrics -->
+        <section class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-2">
+            <div class="text-xs uppercase tracking-wide text-slate-400">Avg New→Pending</div>
+            <div class="text-2xl font-semibold" id="metric-new-pending">--</div>
+            <div class="text-[11px] text-slate-500">Average time to triage</div>
+          </div>
+          <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-2">
+            <div class="text-xs uppercase tracking-wide text-slate-400">Avg Pending→Completed</div>
+            <div class="text-2xl font-semibold" id="metric-pending-completed">--</div>
+            <div class="text-[11px] text-slate-500">Average time to resolve</div>
+          </div>
+          <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-2">
+            <div class="text-xs uppercase tracking-wide text-slate-400">Total Requests</div>
+            <div class="text-2xl font-semibold" id="metric-total">0</div>
+            <div class="text-[11px] text-slate-500">In selected range</div>
+          </div>
+          <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-2">
+            <div class="text-xs uppercase tracking-wide text-slate-400">Admins Completed</div>
+            <div class="text-2xl font-semibold" id="metric-admins-completed">0</div>
+            <div class="text-[11px] text-slate-500">Unique admins closing</div>
+          </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <h3 class="text-sm font-medium text-slate-300">Requests Over Time</h3>
+              <div id="chart-type-toggle" class="inline-flex rounded-lg border border-slate-700 overflow-hidden">
+                <button id="btn-type-bar" class="px-3 py-1.5 text-[11px] font-medium bg-slate-800 text-slate-200 hover:bg-slate-700 focus:outline-none">Stacked Bars</button>
+                <button id="btn-type-cfd" class="px-3 py-1.5 text-[11px] font-medium text-slate-400 hover:bg-slate-700 focus:outline-none">CFD</button>
+              </div>
+            </div>
+            <div id="chart-legend" class="flex gap-4 text-[11px]"></div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            <div class="relative h-80 lg:col-span-3">
+              <canvas id="requests-chart"></canvas>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-950/40 p-3 lg:col-span-2">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-xs uppercase tracking-wide text-slate-400">Status Distribution</div>
+              </div>
+              <div class="flex flex-col sm:flex-row items-center gap-4">
+                <div class="relative h-64 flex-1">
+                  <canvas id="distribution-chart"></canvas>
+                </div>
+                <div id="distribution-legend" class="w-44 text-[11px] text-slate-300"></div>
+              </div>
+              <div id="distribution-empty" class="hidden text-center text-xs text-slate-500 py-4">No statuses for selection.</div>
+            </div>
+          </div>
+          <div id="chart-empty" class="hidden text-center text-xs text-slate-500 py-8">No data for selected filters.</div>
+        </section>
+
+        <!-- Breakdown Table -->
+        <section class="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 space-y-4">
+          <h3 class="text-sm font-medium text-slate-300">Admin Completion Breakdown</h3>
+          <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/40">
+            <table class="w-full text-sm" id="admin-breakdown-table">
+              <thead class="bg-slate-900/60 text-slate-300">
+                <tr>
+                  <th class="text-left font-medium px-4 py-3">Admin</th>
+                  <th class="text-left font-medium px-4 py-3">Completed</th>
+                  <th class="text-left font-medium px-4 py-3">Avg Pending→Complete</th>
+                  <th class="text-left font-medium px-4 py-3">Avg New→Complete</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800" id="admin-breakdown-body"></tbody>
+            </table>
+            <div id="admin-breakdown-empty" class="hidden p-6 text-center text-xs text-slate-500">No completed requests for selection.</div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+  (function(){
+    const STORAGE_KEY='service_requests_v2';
+    const SESSION_KEY='service_admin_session_v1';
+    function load(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY))||[] } catch { return [] } }
+    function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY)) } catch { return null } }
+    function fmtDuration(ms){ if(ms==null) return null; const d=ms/1000; const h=d/3600; if(h<24) return h.toFixed(1)+'h'; const days=h/24; return days.toFixed(1)+'d'; }
+    function startOfDay(ts){ const d=new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
+    function isoDay(ts){ return new Date(startOfDay(ts)).toISOString().slice(0,10); }
+    function weekKey(ts){ const d=new Date(startOfDay(ts)); const onejan=new Date(d.getFullYear(),0,1); const week=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7); return d.getFullYear()+'-W'+String(week).padStart(2,'0'); }
+
+    // Elements
+    const monthSel = document.getElementById('filter-month');
+    const yearSel = document.getElementById('filter-year');
+    const adminSel = document.getElementById('filter-admin');
+    const categorySel = document.getElementById('filter-category');
+    const viewSel = document.getElementById('filter-view');
+    const resetBtn = document.getElementById('clear-filters');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const metricNewPending = document.getElementById('metric-new-pending');
+    const metricPendingCompleted = document.getElementById('metric-pending-completed');
+    const metricTotal = document.getElementById('metric-total');
+    const metricAdminsCompleted = document.getElementById('metric-admins-completed');
+  const chartCanvas = document.getElementById('requests-chart');
+  const chartEmpty = document.getElementById('chart-empty');
+  const distCanvas = document.getElementById('distribution-chart');
+  const distEmpty = document.getElementById('distribution-empty');
+  const distLegend = document.getElementById('distribution-legend');
+    const adminBreakdownBody = document.getElementById('admin-breakdown-body');
+    const adminBreakdownEmpty = document.getElementById('admin-breakdown-empty');
+    const sessionUser = document.getElementById('session-user');
+
+    const all = load();
+    const categories = Array.from(new Set(all.map(r=> r.category).filter(Boolean))).sort();
+    categories.forEach(c=> categorySel.insertAdjacentHTML('beforeend',`<option>${c}</option>`));
+    const adminsBy = Array.from(new Set(all.map(r=> r.completedBy).concat(all.map(r=> r.pendingBy)).filter(Boolean))).sort();
+    adminsBy.forEach(a=> adminSel.insertAdjacentHTML('beforeend',`<option>${a}</option>`));
+
+    // Populate month/year
+    const now = new Date();
+    const months = ['All','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    months.forEach((m,i)=> monthSel.insertAdjacentHTML('beforeend',`<option value="${i}">${m}</option>`));
+    monthSel.value = String(now.getMonth());
+    const years = Array.from(new Set(all.map(r=> new Date(r.createdAt).getFullYear()))).sort();
+    const currentYear = now.getFullYear();
+    if(!years.includes(currentYear)) years.push(currentYear);
+    years.sort();
+    years.forEach(y=> yearSel.insertAdjacentHTML('beforeend',`<option>${y}</option>`));
+    yearSel.value = String(currentYear);
+
+    const session = getSession();
+    if(session?.name){ sessionUser.textContent = 'Logged in as '+session.name; }
+
+  let chartInstance = null;
+  let distInstance = null;
+  let chartMode = 'bar'; // 'bar' or 'cfd'
+  let lastFiltered = [];
+  let lastView = 'daily';
+
+    function applyFilters(){
+      const month = parseInt(monthSel.value,10); // month index or NaN for All
+      const year = parseInt(yearSel.value,10);
+      const admin = adminSel.value;
+      const category = categorySel.value;
+      const view = viewSel.value;
+      const filtered = all.filter(r=>{
+        const d = new Date(r.createdAt);
+        if(!isNaN(year) && d.getFullYear()!==year) return false;
+        if(!isNaN(month) && month!==0 && d.getMonth()!==month) return false; // month 0 = All sentinel here
+        if(admin!=='all' && r.completedBy!==admin && r.pendingBy!==admin) return false;
+        if(category!=='all' && r.category!==category) return false;
+        return true;
+      });
+      lastFiltered = filtered;
+      lastView = view;
+      renderMetrics(filtered);
+      renderChart(filtered, view);
+      renderBreakdown(filtered);
+      renderDistribution(filtered);
+    }
+
+    function avg(arr){ return arr.length? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
+
+    function renderMetrics(list){
+      metricTotal.textContent = list.length;
+      const newPendingDur = list.filter(r=> r.movedToPendingAt && r.status!=='New').map(r=> r.movedToPendingAt - r.createdAt);
+      const pendingCompletedDur = list.filter(r=> r.completedAt && r.movedToPendingAt).map(r=> r.completedAt - r.movedToPendingAt);
+      const ap = avg(newPendingDur); const ac = avg(pendingCompletedDur);
+      metricNewPending.textContent = ap? fmtDuration(ap) : '--';
+      metricPendingCompleted.textContent = ac? fmtDuration(ac) : '--';
+      const adminsSet = new Set(list.filter(r=> r.completedBy).map(r=> r.completedBy));
+      metricAdminsCompleted.textContent = adminsSet.size;
+    }
+
+    // Build time buckets between min and max dates present in data (daily or weekly)
+    function buildBuckets(list, mode){
+      if(!list.length){
+        const today = new Date();
+        const key = mode==='weekly'? weekKey(today.getTime()) : isoDay(today.getTime());
+        const start = startOfDay(today.getTime());
+        return [{ key, start, end: start + (mode==='weekly'? 7*86400000-1 : 86400000-1) }];
+      }
+      const minTs = Math.min(...list.map(r=> Math.min(r.createdAt||Date.now(), r.movedToPendingAt||Infinity, r.completedAt||Infinity)));
+      const maxTs = Math.max(...list.map(r=> Math.max(r.createdAt||0, r.movedToPendingAt||0, r.completedAt||0, Date.now())));
+      const buckets = [];
+      const cur = new Date(startOfDay(minTs));
+      while(cur.getTime() <= maxTs){
+        if(mode==='weekly'){
+          // start of week (Mon)
+          const day = cur.getDay();
+          const diffToMon = (day+6)%7;
+          const start = startOfDay(new Date(cur.getFullYear(), cur.getMonth(), cur.getDate()-diffToMon).getTime());
+          const end = start + 7*86400000 - 1;
+          const key = weekKey(start);
+          buckets.push({ key, start, end });
+          cur.setDate(cur.getDate()+7);
+        } else {
+          const start = startOfDay(cur.getTime());
+          const key = isoDay(cur.getTime());
+          buckets.push({ key, start, end: start + 86400000 - 1 });
+          cur.setDate(cur.getDate()+1);
+        }
+      }
+      return buckets;
+    }
+
+    // Count events per bucket for New, Pending, Completed
+    function countSeries(list, buckets){
+      const newPer = new Array(buckets.length).fill(0);
+      const pendPer = new Array(buckets.length).fill(0);
+      const compPer = new Array(buckets.length).fill(0);
+      const findIdx = (ts)=> buckets.findIndex(b=> ts && ts>=b.start && ts<=b.end);
+      list.forEach(r=>{
+        const iN = findIdx(r.createdAt); if(iN>-1) newPer[iN]++;
+        const iP = findIdx(r.movedToPendingAt); if(iP>-1) pendPer[iP]++;
+        const iC = findIdx(r.completedAt); if(iC>-1) compPer[iC]++;
+      });
+      return { newPer, pendPer, compPer };
+    }
+
+    function toCFD(series){
+      const n = series.newPer.length;
+      const cumNew = new Array(n).fill(0);
+      const cumPendEvt = new Array(n).fill(0);
+      const cumComp = new Array(n).fill(0);
+      for(let i=0;i<n;i++){
+        cumNew[i] = (cumNew[i-1]||0) + series.newPer[i];
+        cumPendEvt[i] = (cumPendEvt[i-1]||0) + series.pendPer[i];
+        cumComp[i] = (cumComp[i-1]||0) + series.compPer[i];
+      }
+      const newWIP = cumNew.map((v,i)=> v - (cumPendEvt[i]||0));
+      const pendWIP = cumPendEvt.map((v,i)=> v - (cumComp[i]||0));
+      const doneCum = cumComp.slice();
+      return { newWIP, pendWIP, doneCum };
+    }
+
+    function renderChart(list, mode){
+      const buckets = buildBuckets(list, mode);
+      const series = countSeries(list, buckets);
+      const labels = buckets.map(b=> b.key);
+
+      const noData = series.newPer.every(v=>v===0) && series.pendPer.every(v=>v===0) && series.compPer.every(v=>v===0);
+      if(noData){
+        chartCanvas.classList.add('hidden');
+        chartEmpty.classList.remove('hidden');
+        if(chartInstance){ chartInstance.destroy(); chartInstance=null; }
+        return;
+      }
+      chartCanvas.classList.remove('hidden');
+      chartEmpty.classList.add('hidden');
+
+      if(chartInstance){ chartInstance.destroy(); }
+
+      // Simple data label plugin (bars only)
+      const dataLabelPlugin = {
+        id:'valueLabels',
+        afterDatasetsDraw(chart){
+          if(chart.config.type !== 'bar') return;
+          const {ctx} = chart; ctx.save();
+          chart.data.datasets.forEach((ds,i)=>{
+            const meta = chart.getDatasetMeta(i);
+            if(meta.hidden) return;
+            meta.data.forEach((pt,idx)=>{
+              const val = ds.data[idx];
+              if(!val) return;
+              const {x,y} = pt.tooltipPosition();
+              ctx.font='10px Inter, sans-serif';
+              ctx.fillStyle = '#cbd5e1';
+              ctx.textAlign='center';
+              ctx.textBaseline='bottom';
+              ctx.fillText(val, x, y-2);
+            });
+          });
+          ctx.restore();
+        }
+      };
+
+      let config;
+      if(chartMode==='bar'){
+        config = {
+          type:'bar',
+          data:{
+            labels,
+            datasets:[
+              { label:'New', data: series.newPer, backgroundColor:'#60a5fa', borderColor:'#60a5fa', borderWidth:1, stack:'counts' },
+              { label:'Pending', data: series.pendPer, backgroundColor:'#f59e0b', borderColor:'#f59e0b', borderWidth:1, stack:'counts' },
+              { label:'Completed', data: series.compPer, backgroundColor:'#34d399', borderColor:'#34d399', borderWidth:1, stack:'counts' }
+            ]
+          },
+          options:{
+            responsive:true,
+            interaction:{mode:'index',intersect:false},
+            plugins:{ legend:{ display:true, labels:{ color:'#94a3b8', font:{size:11} } } },
+            scales:{
+              x:{ stacked:true, ticks:{ color:'#64748b', maxRotation:0 }, grid:{ color:'rgba(148,163,184,0.08)' } },
+              y:{ stacked:true, ticks:{ color:'#64748b' }, grid:{ color:'rgba(148,163,184,0.08)' }, beginAtZero:true }
+            }
+          },
+          plugins:[dataLabelPlugin]
+        };
+      } else {
+        const cfd = toCFD(series);
+        config = {
+          type:'line',
+          data:{
+            labels,
+            datasets:[
+              { label:'New (WIP)', data:cfd.newWIP, borderColor:'#60a5fa', backgroundColor:'#60a5fa33', tension:0.25, fill:true, stack:'cfd', pointRadius:0 },
+              { label:'Pending (WIP)', data:cfd.pendWIP, borderColor:'#f59e0b', backgroundColor:'#f59e0b33', tension:0.25, fill:true, stack:'cfd', pointRadius:0 },
+              { label:'Done (Cumulative)', data:cfd.doneCum, borderColor:'#34d399', backgroundColor:'#34d39933', tension:0.25, fill:true, stack:'cfd', pointRadius:0 }
+            ]
+          },
+          options:{
+            responsive:true,
+            interaction:{mode:'index',intersect:false},
+            plugins:{ legend:{ display:true, labels:{ color:'#94a3b8', font:{size:11} } } },
+            scales:{
+              x:{ stacked:true, ticks:{ color:'#64748b', maxRotation:0 }, grid:{ color:'rgba(148,163,184,0.08)' } },
+              y:{ stacked:true, ticks:{ color:'#64748b' }, grid:{ color:'rgba(148,163,184,0.08)' }, beginAtZero:true }
+            }
+          }
+        };
+      }
+
+      chartInstance = new Chart(chartCanvas.getContext('2d'), config);
+    }
+
+    function renderBreakdown(list){
+      const completed = list.filter(r=> r.status==='Completed' && r.completedBy);
+      if(!completed.length){
+        adminBreakdownBody.innerHTML='';
+        adminBreakdownEmpty.classList.remove('hidden');
+        return;
+      }
+      adminBreakdownEmpty.classList.add('hidden');
+      const byAdmin = new Map();
+      completed.forEach(r=>{
+        const a = r.completedBy;
+        const arr = byAdmin.get(a) || [];
+        arr.push(r);
+        byAdmin.set(a,arr);
+      });
+      const rows = Array.from(byAdmin.entries()).map(([admin, arr])=>{
+        const pendingComplete = arr.filter(r=> r.completedAt && r.movedToPendingAt).map(r=> r.completedAt - r.movedToPendingAt);
+        const newComplete = arr.filter(r=> r.completedAt).map(r=> r.completedAt - r.createdAt);
+        function avgMs(a){ return a.length ? a.reduce((x,y)=>x+y,0)/a.length : null; }
+        return {
+          admin,
+          count: arr.length,
+          avgPending: avgMs(pendingComplete),
+            avgNew: avgMs(newComplete)
+        };
+      }).sort((a,b)=> b.count - a.count);
+      adminBreakdownBody.innerHTML = rows.map(r=>`<tr>
+        <td class="px-4 py-2">${r.admin}</td>
+        <td class="px-4 py-2 text-slate-300 font-medium">${r.count}</td>
+        <td class="px-4 py-2 text-xs text-slate-400">${r.avgPending? fmtDuration(r.avgPending):'--'}</td>
+        <td class="px-4 py-2 text-xs text-slate-400">${r.avgNew? fmtDuration(r.avgNew):'--'}</td>
+      </tr>`).join('');
+    }
+
+    function renderDistribution(list){
+      if(!distCanvas) return;
+      const counts = { New:0, Pending:0, Completed:0 };
+      list.forEach(r=>{ counts[r.status] = (counts[r.status]||0)+1; });
+      const total = counts.New + counts.Pending + counts.Completed;
+      if(!total){
+        distCanvas.classList.add('hidden');
+        distEmpty?.classList.remove('hidden');
+        if(distLegend){ distLegend.innerHTML=''; distLegend.classList.add('hidden'); }
+        if(distInstance){ distInstance.destroy(); distInstance=null; }
+        return;
+      }
+      distCanvas.classList.remove('hidden');
+      distEmpty?.classList.add('hidden');
+      if(distLegend){ distLegend.classList.remove('hidden'); }
+      if(distInstance) distInstance.destroy();
+      // Inline plugin to draw percentage labels on slices
+      const doughnutLabelPlugin = {
+        id:'doughnutLabels',
+        afterDatasetsDraw(chart){
+          const dataset = chart.data.datasets?.[0];
+          if(!dataset) return;
+          const total = (dataset.data||[]).reduce((a,b)=>a+(b||0),0);
+          if(!total) return;
+          const meta = chart.getDatasetMeta(0);
+          const {ctx} = chart; ctx.save();
+          ctx.font = '11px Inter, sans-serif';
+          ctx.fillStyle = '#cbd5e1';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          meta.data.forEach((arc, idx)=>{
+            const v = dataset.data[idx]||0; if(!v) return;
+            const pct = Math.round((v/total)*100);
+            if(pct < 3) return; // avoid clutter for tiny slices
+            const {x,y} = arc.tooltipPosition();
+            ctx.fillText(pct+'%', x, y);
+          });
+          ctx.restore();
+        }
+      };
+      distInstance = new Chart(distCanvas.getContext('2d'), {
+        type:'doughnut',
+        data:{
+          labels:['New','Pending','Completed'],
+          datasets:[{
+            data:[counts.New, counts.Pending, counts.Completed],
+            backgroundColor:['#60a5fa','#f59e0b','#34d399'],
+            borderColor:['#1f2937','#1f2937','#1f2937'],
+            borderWidth:1
+          }]
+        },
+        options:{
+          responsive:true,
+          plugins:{
+            legend:{ display:false }
+          },
+          cutout:'60%'
+        },
+        plugins:[doughnutLabelPlugin]
+      });
+
+      // Custom legend to the right with percentages
+      if(distLegend){
+        const labels = ['New','Pending','Completed'];
+        const values = [counts.New, counts.Pending, counts.Completed];
+        const colors = ['#60a5fa','#f59e0b','#34d399'];
+        const totalCount = values.reduce((a,b)=>a+b,0) || 1;
+        distLegend.innerHTML = labels.map((label, i)=>{
+          const val = values[i]||0;
+          const pct = Math.round((val/totalCount)*100);
+          return `<div class="flex items-center justify-between gap-2 py-1">
+            <div class="flex items-center gap-2">
+              <span class="inline-block h-2.5 w-2.5 rounded" style="background:${colors[i]}"></span>
+              <span class="text-slate-400">${label}</span>
+            </div>
+            <div class="tabular-nums text-slate-300">${val} <span class="text-slate-500">(${pct}%)</span></div>
+          </div>`;
+        }).join('');
+      }
+    }
+
+    // Events
+    [monthSel, yearSel, adminSel, categorySel, viewSel].forEach(sel=> sel.addEventListener('change', applyFilters));
+    resetBtn.addEventListener('click', ()=>{ monthSel.value=String(new Date().getMonth()); yearSel.value=String(new Date().getFullYear()); adminSel.value='all'; categorySel.value='all'; viewSel.value='daily'; applyFilters(); });
+    refreshBtn.addEventListener('click', ()=> window.location.reload());
+    // Chart type toggle
+    const btnBar = document.getElementById('btn-type-bar');
+    const btnCFD = document.getElementById('btn-type-cfd');
+    function updateToggleUI(){
+      if(chartMode==='bar'){
+        btnBar.classList.add('bg-slate-800','text-slate-200');
+        btnBar.classList.remove('text-slate-400');
+        btnCFD.classList.remove('bg-slate-800','text-slate-200');
+        btnCFD.classList.add('text-slate-400');
+      } else {
+        btnCFD.classList.add('bg-slate-800','text-slate-200');
+        btnCFD.classList.remove('text-slate-400');
+        btnBar.classList.remove('bg-slate-800','text-slate-200');
+        btnBar.classList.add('text-slate-400');
+      }
+    }
+    btnBar?.addEventListener('click', ()=>{ chartMode='bar'; updateToggleUI(); renderChart(lastFiltered, lastView); });
+    btnCFD?.addEventListener('click', ()=>{ chartMode='cfd'; updateToggleUI(); renderChart(lastFiltered, lastView); });
+  // Logout logic
+  const logoutBtn = document.getElementById('logout-btn');
+  logoutBtn.addEventListener('click', ()=>{ localStorage.removeItem(SESSION_KEY); window.location.href='index.html'; });
+
+  // PDF Export
+  const pdfBtn = document.getElementById('export-pdf');
+  pdfBtn?.addEventListener('click', async ()=>{
+    const { jsPDF } = window.jspdf || {};
+    if(!jsPDF){ alert('jsPDF not loaded'); return; }
+    const page = document.querySelector('main');
+    if(!page){ alert('Nothing to export'); return; }
+    pdfBtn.disabled = true; pdfBtn.textContent='Exporting...';
+    try {
+      const canvas = await html2canvas(page, {backgroundColor: getComputedStyle(document.body).backgroundColor, scale: 2});
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p','pt','a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth - 40; // margins
+      const imgHeight = canvas.height * (imgWidth / canvas.width);
+      let y = 20;
+      if(imgHeight < pageHeight - 40){
+        pdf.addImage(imgData, 'PNG', 20, y, imgWidth, imgHeight);
+      } else {
+        // If content longer than one page, slice vertically
+        let position = 0;
+        const sliceHeight = Math.floor(canvas.height * ((pageHeight - 40) / imgHeight));
+        while(position < canvas.height){
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = canvas.width;
+            sliceCanvas.height = Math.min(sliceHeight, canvas.height - position);
+          const ctx = sliceCanvas.getContext('2d');
+          ctx.drawImage(canvas, 0, position, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
+          const sliceData = sliceCanvas.toDataURL('image/png');
+          const sliceImgHeight = sliceCanvas.height * (imgWidth / sliceCanvas.width);
+          pdf.addImage(sliceData, 'PNG', 20, 20, imgWidth, sliceImgHeight);
+          position += sliceHeight;
+          if(position < canvas.height) pdf.addPage();
+        }
+      }
+      pdf.save('dashboard.pdf');
+    } catch(err){
+      console.error(err); alert('Failed to export PDF');
+    } finally {
+      pdfBtn.disabled=false; pdfBtn.textContent='Export PDF';
+    }
+  });
+
+  // Initialize centralized preferences (per-admin scope)
+  if(window.Prefs && typeof window.Prefs.init === 'function'){
+    window.Prefs.init();
+  }
+
+    applyFilters();
+  })();
+  </script>
+</body>
+</html>
