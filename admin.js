@@ -18,8 +18,8 @@
   // 1) Set MANUAL_ADMIN_NAME = 'Your Name' below, OR
   // 2) Define window.SERVICE_MANUAL_ADMIN_NAME (and optional window.SERVICE_MANUAL_ADMIN_EMAIL) in HTML before this script.
   // This will populate the admin session so actions (Pending/Completed, comments) use that name.
-  const MANUAL_ADMIN_NAME = 'Tony Starks';
-  const MANUAL_ADMIN_EMAIL = 'tstarks@gmail.com';
+  const MANUAL_ADMIN_NAME = '';
+  const MANUAL_ADMIN_EMAIL = '';
   function ensureManualSession(){
     try {
       const name = (window.SERVICE_MANUAL_ADMIN_NAME || MANUAL_ADMIN_NAME || '').trim();
