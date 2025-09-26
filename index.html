@@ -325,6 +325,25 @@
 		function setSession(admin){ localStorage.setItem(SESSION_KEY, JSON.stringify({id:admin.id,name:admin.name,ts:Date.now()})); }
 		function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY)) } catch { return null } }
 
+		// Optional: Manual admin override on index page as well
+		// You can set either of the following:
+		// 1) In this file: set MANUAL_ADMIN_NAME / MANUAL_ADMIN_EMAIL constants below
+		// 2) Globally in HTML before this script: window.SERVICE_MANUAL_ADMIN_NAME / window.SERVICE_MANUAL_ADMIN_EMAIL
+		const MANUAL_ADMIN_NAME = '';
+		const MANUAL_ADMIN_EMAIL = '';
+		function ensureManualSession(){
+			try {
+				const name = (window.SERVICE_MANUAL_ADMIN_NAME || MANUAL_ADMIN_NAME || '').trim();
+				if(!name) return;
+				const email = (window.SERVICE_MANUAL_ADMIN_EMAIL || MANUAL_ADMIN_EMAIL || '').trim();
+				const existing = getSession();
+				if(existing && existing.name === name && (!email || existing.email === email)) return;
+				const session = { id: -1, name, email, ts: Date.now() };
+				localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+				try { window.dispatchEvent(new CustomEvent('adminSessionChanged', { detail: session })); } catch {}
+			} catch {}
+		}
+
 		function openLogin(){ loginError.classList.add('hidden'); loginError.textContent=''; loginModal.classList.remove('hidden'); setTimeout(()=> loginNameInput.focus(),50); }
 		function closeLogin(){ loginModal.classList.add('hidden'); }
 
@@ -352,7 +371,21 @@
 			if(!name){ loginError.textContent='Name required'; loginError.classList.remove('hidden'); return; }
 			const admins = loadAdmins();
 			const match = admins.find(a=> a.name === name);
-			if(!match){ loginError.textContent='Admin not found'; loginError.classList.remove('hidden'); return; }
+			if(!match){
+				// Allow login only if it matches the manual override name
+				const manualName = (window.SERVICE_MANUAL_ADMIN_NAME || MANUAL_ADMIN_NAME || 'Tony Starks').trim();
+				if(manualName && name === manualName){
+					localStorage.setItem(SESSION_KEY, JSON.stringify({ id:-1, name: manualName, ts: Date.now() }));
+					loginBtn.textContent = 'Go to Admin ('+manualName+')';
+					loginBtn.setAttribute('data-session','true');
+					closeLogin();
+					window.location.href = 'admin.html';
+					return;
+				}
+				loginError.textContent='Admin not found';
+				loginError.classList.remove('hidden');
+				return;
+			}
 			setSession(match);
 			loginBtn.textContent = 'Go to Admin ('+match.name+')';
 			loginBtn.setAttribute('data-session','true');
@@ -360,6 +393,8 @@
 			window.location.href = 'admin.html';
 		});
 
+		// Ensure any manual override is reflected before updating UI
+		ensureManualSession();
 		updateLoginButton();
 
 		// Initialize shared preferences (per-admin when logged in)
